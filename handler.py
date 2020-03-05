@@ -8,7 +8,6 @@ import decimal
 
 client = boto3.client('ses', region_name=os.environ['SES_REGION'])
 sender = os.environ['SENDER_EMAIL']
-subject = os.environ['EMAIL_SUBJECT']
 configset = os.environ['CONFIG_SET']
 charset = 'UTF-8'
 
@@ -19,9 +18,10 @@ def sendMail(event, context):
 
     try:
         data = event['body']
-        content = 'Sender Email: ' + data['email'] + ',<br> FullName: ' + data['fullname'] + ',<br> Form Type: ' + data['type'] + ',<br> Message Contents: ' + data['message']
+        content = 'Sender Email: ' + data['email'] + ',<br> FullName: ' + data['fullname'] + ',<br> Form Type: ' + data['type'] + ',<br> Skill: ' + data['skill'] + ',<br> Message Contents: ' + data['message']
+        subject = '[' + data['skill'] + '] ' + os.environ['EMAIL_SUBJECT']
         saveToDynamoDB(data)
-        response = sendMailToUser(data, content)
+        response = sendMailToUser(data, content, subject)
     except ClientError as e:
         print(e.response['Error']['Message'])
     else:
@@ -50,6 +50,7 @@ def saveToDynamoDB(data):
         'fullname': data['fullname'],
         'email': data['email'],
         'type': data['type'],
+        'skill': data['skill'],
         'message': data['message'],
         'createdAt': timestamp,
         'updatedAt': timestamp
@@ -57,7 +58,7 @@ def saveToDynamoDB(data):
     table.put_item(Item=item)
     return
 
-def sendMailToUser(data, content):
+def sendMailToUser(data, content, subject):
     # Send Email using SES
     return client.send_email(
         Source=sender,
@@ -65,6 +66,9 @@ def sendMailToUser(data, content):
             'ToAddresses': [
                 sender,
             ],
+            'CcAddresses': [
+                os.environ["CC_EMAIL"]
+            ]
         },
         Message={
             'Subject': {
