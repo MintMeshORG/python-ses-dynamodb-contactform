@@ -37,6 +37,7 @@ provider:
   environment:
     DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
     SENDER_EMAIL: ${self:custom.secrets.SENDER_EMAIL}
+    CC_EMAIL: ${self:custom.secrets.CC_EMAIL}
     EMAIL_SUBJECT: ${self:custom.secrets.EMAIL_SUBJECT}
     SES_REGION: ${self:custom.secrets.SES_REGION, 'us-east-1'}
     CONFIG_SET: ConfigSet
